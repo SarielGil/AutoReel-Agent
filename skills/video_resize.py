@@ -11,6 +11,8 @@ def resize_to_vertical(
     output_path: str,
     width: int = 1080,
     height: int = 1920,
+    crf: int = 23,
+    preset: str = "medium",
 ) -> str:
     """
     Resize video to vertical 9:16 format for social media.
@@ -23,6 +25,8 @@ def resize_to_vertical(
         output_path: Path for output vertical video
         width: Target width (default 1080)
         height: Target height (default 1920)
+        crf: Quality factor (23 default, 28-30 for mobile compression)
+        preset: FFmpeg speed preset
 
     Returns:
         Path to the resized video
@@ -32,4 +36,6 @@ def resize_to_vertical(
         output_path=output_path,
         width=width,
         height=height,
+        crf=crf,
+        preset=preset,
     )

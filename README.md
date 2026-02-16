@@ -174,32 +174,25 @@ cp .env.example .env
 # Edit .env with your API keys
 ```
 
-### Usage
+### Current Usage (v0.1)
 
-```python
-from agents.orchestrator import OrchestratorAgent
+```bash
+# Step 1: Transcribe the video
+python3 run_transcription.py
 
-# From a local file
-agent = OrchestratorAgent()
-reels = agent.run(
-    input_path="/path/to/hebrew-podcast-episode.mp4",
-    max_reels=5,
-    speed_up_audio=True,   # 2x speed for faster transcription
-    target_platforms=["instagram", "tiktok", "youtube_shorts"]
-)
+# Step 2: Detect highlights (focused on Speaker B)
+python3 run_highlights.py
 
-# From a YouTube URL
-reels = agent.run(
-    input_url="https://youtube.com/watch?v=...",
-    max_reels=5
-)
+# Step 3: Generate reels
+python3 run_generation.py
 
-# Output: list of reel file paths in ./output/
-for reel in reels:
-    print(f"✅ Created: {reel.path} ({reel.duration}s) — Score: {reel.virality_score}")
+# Step 4: Verify privacy (optional)
+python3 verify_privacy.py output/reel_001_instagram.mp4
 ```
 
-### CLI (Planned)
+**Output:** Reels are saved to `output/reel_XXX_instagram.mp4`
+
+### Planned CLI
 
 ```bash
 # Process a local file
@@ -277,12 +270,19 @@ The LLM (Gemini) receives the full transcript and returns ranked highlights with
 
 ### Phase 1 — MVP ✨
 - [x] Project structure and README
-- [ ] Audio extraction with 2x speed optimization
-- [ ] Hebrew transcription with ivrit-ai Whisper
-- [ ] Gemini-based highlight detection
-- [ ] FFmpeg clip cutting
-- [ ] Basic subtitle burn-in (Hebrew RTL)
-- [ ] Vertical video export (9:16)
+- [x] Audio extraction with 2x speed optimization
+- [x] Hebrew transcription with ivrit-ai Whisper (Gemini-based)
+- [x] Gemini-based highlight detection (2.5 Flash)
+- [x] FFmpeg clip cutting
+- [x] Basic subtitle burn-in (Hebrew RTL)
+- [x] Vertical video export (9:16)
+- [x] Speaker focus (target specific speaker)
+- [/] Privacy verification (Gemini Vision)
+
+**Note:** Subtitle burning requires FFmpeg with `libass` support. Install via:
+```bash
+brew install ffmpeg  # macOS (full build with libass)
+```
 
 ### Phase 2 — Polish 🎨
 - [ ] Animated subtitle styles (word-by-word highlight)

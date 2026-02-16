@@ -57,12 +57,13 @@ class TranscriptionAgent:
             channels=self.config['audio']['channels'],
         )
 
-        # Step 2: Transcribe with Hebrew-optimized Whisper
+        # Step 2: Transcribe with Hebrew-optimized Whisper or Gemini
         raw_segments = transcribe_hebrew(
             audio_path=audio_path,
             model_name=self.config['whisper']['model'],
             device=self.config['whisper']['device'],
             language=self.config['whisper']['language'],
+            method=self.config['whisper'].get('method', 'local'),
         )
 
         # Step 3: Adjust timestamps back to original video time
@@ -74,6 +75,7 @@ class TranscriptionAgent:
                 start=seg['start'] * speed_factor,
                 end=seg['end'] * speed_factor,
                 text=seg['text'],
+                speaker=seg.get('speaker'),
                 confidence=seg.get('confidence'),
             ))
 

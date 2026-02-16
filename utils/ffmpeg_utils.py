@@ -6,11 +6,11 @@ Wrapper around FFmpeg for common video/audio operations.
 import subprocess
 import os
 from pathlib import Path
-
+from typing import Optional, Union
 
 def extract_audio(
     video_path: str,
-    output_path: str | None = None,
+    output_path: Optional[str] = None,
     speed_factor: float = 1.0,
     sample_rate: int = 16000,
     channels: int = 1,
@@ -80,10 +80,12 @@ def cut_clip(
 
     if reencode:
         cmd.extend([
-            "-i", str(video_path),
             "-ss", str(start),
+            "-i", str(video_path),
             "-t", str(duration),
             "-c:v", "libx264",
+            "-crf", "18",
+            "-preset", "ultrafast",
             "-c:a", "aac",
             output_path,
         ])
@@ -106,6 +108,8 @@ def resize_vertical(
     output_path: str,
     width: int = 1080,
     height: int = 1920,
+    crf: int = 23,
+    preset: str = "medium",
 ) -> str:
     """
     Resize video to vertical 9:16 format with smart center-crop.
@@ -115,6 +119,8 @@ def resize_vertical(
         output_path: Path for output video
         width: Target width (default 1080)
         height: Target height (default 1920)
+        crf: Constant Rate Factor (0-51, lower is better quality, 23 is default, 28-30 good for mobile)
+        preset: FFmpeg compression preset (speed vs quality: ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow)
 
     Returns:
         Path to the resized video
@@ -130,7 +136,10 @@ def resize_vertical(
         "-i", str(video_path),
         "-vf", filter_str,
         "-c:v", "libx264",
+        "-crf", str(crf),
+        "-preset", preset,
         "-c:a", "aac",
+        "-b:a", "128k",
         output_path,
     ]
 
@@ -171,7 +180,14 @@ def burn_subtitles(
         output_path,
     ]
 
-    subprocess.run(cmd, check=True, capture_output=True)
+    try:
+        subprocess.run(cmd, check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        print(f"⚠️ Warning: Subtitle burning failed: {e.stderr.decode()}")
+        print("Falling back to copying video without subtitles...")
+        import shutil
+        shutil.copy2(video_path, output_path)
+    
     return output_path
 
 

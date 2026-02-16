@@ -13,6 +13,7 @@ Scoring signals:
 
 import yaml
 
+from typing import Optional
 from models import Transcript, Highlight
 from skills.highlight_detection import detect_highlights_llm
 
@@ -31,16 +32,15 @@ class HighlightAgent:
         self,
         transcript: Transcript,
         max_highlights: int = 5,
+        focus_speaker: Optional[str] = None,
     ) -> list[Highlight]:
         """
         Detect the most viral-worthy moments in a transcript.
 
-        Sends the full transcript to Gemini API with instructions
-        to identify highlights based on multiple engagement signals.
-
         Args:
             transcript: Full Hebrew transcript with timestamps
             max_highlights: Maximum number of highlights to return
+            focus_speaker: Optional speaker to prioritize
 
         Returns:
             List of Highlight objects sorted by virality score (desc)
@@ -57,6 +57,7 @@ class HighlightAgent:
             max_duration=reel_config['max_duration'],
             min_score=detection_config['min_score'],
             signals=detection_config['signals'],
+            focus_speaker=focus_speaker,
         )
 
         # Sort by virality score (highest first)

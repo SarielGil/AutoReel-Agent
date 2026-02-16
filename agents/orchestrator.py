@@ -56,7 +56,7 @@ class OrchestratorAgent:
         input_url: Optional[str] = None,
         max_reels: int = 5,
         speed_up_audio: bool = True,
-        target_platforms: list[str] | None = None,
+        target_platforms: Optional[list] = None,
     ) -> PipelineResult:
         """
         Run the full AutoReel pipeline.

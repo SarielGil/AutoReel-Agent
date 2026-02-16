@@ -2,9 +2,10 @@
 # Override via .env file or environment variables
 
 whisper:
-  model: "ivrit-ai/whisper-large-v3"
-  device: "cuda"          # "cuda" or "cpu"
-  language: "he"          # Hebrew
+  method: "gemini"        # "local" or "gemini"
+  model: "gemini-2.0-flash"
+  device: "cpu"
+  language: "he"
   task: "transcribe"
 
 audio:

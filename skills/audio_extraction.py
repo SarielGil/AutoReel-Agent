@@ -5,6 +5,7 @@ Sends only audio to the transcription model — no video data.
 Supports optional speedup (2x) to reduce transcription compute.
 """
 
+from typing import Optional
 from utils.ffmpeg_utils import extract_audio
 
 
@@ -13,7 +14,7 @@ def extract_audio_from_video(
     speed_factor: float = 2.0,
     sample_rate: int = 16000,
     channels: int = 1,
-    output_path: str | None = None,
+    output_path: Optional[str] = None,
 ) -> str:
     """
     Extract audio-only from video, optimized for Whisper transcription.

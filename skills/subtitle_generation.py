@@ -4,6 +4,7 @@ Generate SRT/ASS subtitle files with Hebrew RTL styling and word-level timing.
 """
 
 from pathlib import Path
+from typing import Optional
 from models import TranscriptSegment
 from utils.hebrew_utils import (
     split_hebrew_lines,
@@ -17,7 +18,7 @@ def generate_subtitles(
     segments: list[TranscriptSegment],
     output_path: str,
     clip_start: float = 0,
-    style_config: dict | None = None,
+    style_config: Optional[dict] = None,
 ) -> str:
     """
     Generate an ASS subtitle file with Hebrew RTL styling.

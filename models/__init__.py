@@ -21,6 +21,7 @@ class TranscriptSegment(BaseModel):
     start: float = Field(..., description="Start time in seconds")
     end: float = Field(..., description="End time in seconds")
     text: str = Field(..., description="Hebrew text content")
+    speaker: Optional[str] = Field(None, description="Speaker identifier (e.g. Speaker A)")
     confidence: Optional[float] = Field(None, description="Transcription confidence score")
 
     @property
@@ -40,10 +41,10 @@ class Transcript(BaseModel):
         return " ".join(seg.text for seg in self.segments)
 
     def get_segments_in_range(self, start: float, end: float) -> list[TranscriptSegment]:
-        """Get all segments that fall within a time range."""
+        """Get all segments that overlap with a time range."""
         return [
             seg for seg in self.segments
-            if seg.start >= start and seg.end <= end
+            if seg.end > start and seg.start < end
         ]
 
 

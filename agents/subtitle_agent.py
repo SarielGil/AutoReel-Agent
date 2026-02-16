@@ -5,6 +5,7 @@ burns them into the video frames.
 """
 
 from pathlib import Path
+from typing import Optional
 import yaml
 
 from models import Clip, Reel, Transcript, Platform
@@ -26,7 +27,7 @@ class SubtitleAgent:
         self,
         clips: list[Clip],
         transcript: Transcript,
-        platforms: list[Platform] | None = None,
+        platforms: Optional[list] = None,
     ) -> list[Reel]:
         """
         Add Hebrew subtitles to clips and export as final reels.

@@ -26,18 +26,15 @@ class EditorAgent:
         self,
         video_path: str,
         highlights: list[Highlight],
+        skip_resize: bool = False,
     ) -> list[Clip]:
         """
         Extract clips from video at highlight timestamps and resize to vertical.
 
-        For each highlight:
-        1. Add padding before/after the timestamp
-        2. Cut the clip from the original video
-        3. Resize to 9:16 vertical format
-
         Args:
-            video_path: Path to original video
+            video_path: Path to source video
             highlights: List of detected highlights
+            skip_resize: If True, assumes input is already vertical and skips resize step.
 
         Returns:
             List of Clip objects with paths to extracted clip files
@@ -63,19 +60,23 @@ class EditorAgent:
                 end=padded_end,
             )
 
-            # Resize to vertical
-            vertical_filename = f"clip_{highlight.id:03d}_vertical.mp4"
-            vertical_path = str(output_dir / vertical_filename)
+            if skip_resize:
+                final_path = clip_path
+            else:
+                # Resize to vertical
+                vertical_filename = f"clip_{highlight.id:03d}_vertical.mp4"
+                vertical_path = str(output_dir / vertical_filename)
 
-            resize_to_vertical(
-                video_path=clip_path,
-                output_path=vertical_path,
-            )
+                resize_to_vertical(
+                    video_path=clip_path,
+                    output_path=vertical_path,
+                )
+                final_path = vertical_path
 
             clips.append(Clip(
                 id=highlight.id,
                 source_path=video_path,
-                clip_path=vertical_path,
+                clip_path=final_path,
                 start=padded_start,
                 end=padded_end,
                 highlight=highlight,
