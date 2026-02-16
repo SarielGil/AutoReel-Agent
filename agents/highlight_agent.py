@@ -32,7 +32,6 @@ class HighlightAgent:
         self,
         transcript: Transcript,
         max_highlights: int = 5,
-        focus_speaker: Optional[str] = None,
     ) -> list[Highlight]:
         """
         Detect the most viral-worthy moments in a transcript.
@@ -40,7 +39,6 @@ class HighlightAgent:
         Args:
             transcript: Full Hebrew transcript with timestamps
             max_highlights: Maximum number of highlights to return
-            focus_speaker: Optional speaker to prioritize
 
         Returns:
             List of Highlight objects sorted by virality score (desc)
@@ -55,9 +53,8 @@ class HighlightAgent:
             max_highlights=max_highlights,
             min_duration=reel_config['min_duration'],
             max_duration=reel_config['max_duration'],
-            min_score=detection_config['min_score'],
+            min_score=detection_config.get('min_virality_score', 6),
             signals=detection_config['signals'],
-            focus_speaker=focus_speaker,
         )
 
         # Sort by virality score (highest first)

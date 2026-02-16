@@ -16,12 +16,13 @@ HIGHLIGHT_PROMPT = """
 המשימה שלך: מצא את {max_highlights} הרגעים הכי מעניינים, ציטוטים חזקים, ורגעים ויראליים 
 שיכולים להפוך לרילס מצליח באינסטגרם, טיקטוק, או YouTube Shorts.
 
-{focus_instruction}
 
 חוקים:
 - כל קטע חייב להיות בין {min_duration} ל-{max_duration} שניות
-- חפש רגעים עם: ערך לימודי, מידע שימושי, תובנות מעמיקות, רגש חזק או הומור.
-- המטרה היא שהצופה ילמד משהו חדש או יקבל השראה מהתוכן.
+- התמקד בידע ותובנות לימודיות - חפש רגעים שמלמדים משהו חדש, מסבירים מושגים, או נותנים עצות מעשיות
+- הימנע מתוכן פרסומי - אל תבחר קטעים שמדברים על השירותים של הדוברים, הקליניקה, או קידום מכירות
+- חפש: מידע שימושי, תובנות מעמיקות, הסברים מדעיים, טיפים מעשיים, סיפורים אישיים מלמדים
+- המטרה: הצופה צריך ללמוד משהו חדש או לקבל השראה מהתוכן
 - דרג כל קטע לפי פוטנציאל ויראליות (1-10)
 - הקטעים צריכים לעבוד כסרטון עצמאי (לא צריך הקשר נוסף)
 
@@ -38,7 +39,7 @@ HIGHLIGHT_PROMPT = """
             "virality_score": <1-10>,
             "reason": "<why this moment is engaging - in Hebrew>",
             "suggested_title": "<catchy reel title - in Hebrew>",
-            "signals": ["emotional_peak", "quotable", ...]
+            "signals": ["educational_peak", "quotable", ...]
         }}
     ]
 }}
@@ -53,7 +54,6 @@ def detect_highlights_llm(
     max_duration: int = 90,
     min_score: int = 6,
     signals: Optional[list[str]] = None,
-    focus_speaker: Optional[str] = None,
 ) -> list[Highlight]:
     """
     Detect viral-worthy highlights using Gemini LLM.
@@ -85,21 +85,12 @@ def detect_highlights_llm(
 
     transcript_text = "\n".join(transcript_lines)
 
-    focus_instruction = ""
-    if focus_speaker:
-        focus_instruction = (
-            f"דגש חשוב: התמקד אך ורק ברגעים שבהם {focus_speaker} מדבר/ת. "
-            f"אנחנו רוצים רגעים שבהם {focus_speaker} הוא/היא הדובר/ת העיקרי/ת ומופיע/ה לבד בפריים. "
-            f"הימנע ככל האפשר מרגעים שבהם רואים את הדובר/ת השני/ה, גם אם {focus_speaker} מדבר/ת."
-        )
-
     # Build prompt
     prompt = HIGHLIGHT_PROMPT.format(
         max_highlights=max_highlights,
         min_duration=min_duration,
         max_duration=max_duration,
         transcript_text=transcript_text,
-        focus_instruction=focus_instruction,
     )
 
     # Call Gemini

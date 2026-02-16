@@ -26,15 +26,32 @@ def run_highlights():
     agent = HighlightAgent(config_path)
     
     # Increase max_highlights if needed, or get from config
-    max_highlights = 5
-    focus_speaker = "Speaker B"
-    highlights = agent.detect(transcript, max_highlights=max_highlights, focus_speaker=focus_speaker)
+    max_highlights = 10  # Get more candidates, then filter
+    highlights = agent.detect(transcript, max_highlights=max_highlights)
 
     # Filter out hallucinations (timestamps beyond video duration)
     valid_highlights = [h for h in highlights if h.start < transcript.total_duration]
-    highlights = valid_highlights
+    
+    # NEW: Filter for single-speaker segments only
+    single_speaker_highlights = []
+    for h in valid_highlights:
+        # Get all segments in this highlight's time range
+        segments = transcript.get_segments_in_range(h.start, h.end)
+        if not segments:
+            continue
+        
+        # Check if all segments have the same speaker
+        speakers = set(seg.speaker for seg in segments if seg.speaker)
+        if len(speakers) == 1:  # Only one speaker throughout
+            single_speaker_highlights.append(h)
+            print(f"✅ Keeping highlight: {h.suggested_title} (Speaker: {speakers.pop()})")
+        else:
+            print(f"❌ Skipping multi-speaker highlight: {h.suggested_title}")
+    
+    # Take top 5 by virality score
+    highlights = sorted(single_speaker_highlights, key=lambda x: x.virality_score, reverse=True)[:5]
 
-    print(f"✅ Found {len(highlights)} valid highlights!")
+    print(f"✅ Found {len(highlights)} single-speaker highlights!")
     
     # Save highlights
     highlights_data = [h.model_dump() for h in highlights]
@@ -51,6 +68,7 @@ def run_highlights():
         print(f"Score: {h.virality_score}/10")
         print(f"Reason: {h.reason}")
         print(f"Text: {h.text[:100]}...")
+
 
 if __name__ == "__main__":
     run_highlights()
