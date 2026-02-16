@@ -1,0 +1,41 @@
+# Environment
+.env
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Project specific
+output/
+input/
+*.mp4
+*.mp3
+*.wav
+*.srt
+*.ass
+*.mkv
+*.avi
+*.webm
+
+# Models (large files)
+*.pt
+*.bin
+*.safetensors
+
+# Logs
+*.log
+logs/

@@ -1,0 +1,69 @@
+# AutoReel Agent - Global Configuration
+# Override via .env file or environment variables
+
+whisper:
+  model: "ivrit-ai/whisper-large-v3"
+  device: "cuda"          # "cuda" or "cpu"
+  language: "he"          # Hebrew
+  task: "transcribe"
+
+audio:
+  speed_factor: 2.0       # Speed up audio N times for faster transcription
+  sample_rate: 16000      # Optimal for Whisper
+  channels: 1             # Mono
+  format: "wav"
+
+video:
+  output_format: "mp4"
+  codec: "libx264"
+  audio_codec: "aac"
+  vertical_resolution: "1080x1920"   # 9:16
+  horizontal_resolution: "1920x1080" # 16:9
+
+reels:
+  min_duration: 30        # seconds
+  max_duration: 90        # seconds
+  max_reels_per_video: 10
+  padding_before: 1.0     # seconds of padding before highlight
+  padding_after: 1.0      # seconds of padding after highlight
+
+subtitles:
+  style: "modern"         # "modern", "classic", "bold"
+  font: "Arial"
+  font_size: 48
+  primary_color: "&H00FFFFFF"   # White (ASS format)
+  outline_color: "&H00000000"  # Black outline
+  outline_width: 3
+  position: "bottom"      # "bottom", "center", "top"
+  rtl: true               # Right-to-left for Hebrew
+  max_chars_per_line: 30
+  word_highlight: true     # Highlight active word
+
+highlight_detection:
+  model: "gemini-2.0-flash"
+  min_score: 6            # Minimum virality score (1-10) to become a reel
+  signals:
+    - emotional_peaks
+    - quotable_statements
+    - topic_transitions
+    - speaker_energy
+    - audience_appeal
+
+platforms:
+  instagram:
+    max_duration: 90
+    aspect_ratio: "9:16"
+    resolution: "1080x1920"
+  tiktok:
+    max_duration: 180
+    aspect_ratio: "9:16"
+    resolution: "1080x1920"
+  youtube_shorts:
+    max_duration: 60
+    aspect_ratio: "9:16"
+    resolution: "1080x1920"
+
+paths:
+  input_dir: "./input"
+  output_dir: "./output"
+  temp_dir: "./temp"
