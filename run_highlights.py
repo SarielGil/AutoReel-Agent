@@ -5,15 +5,33 @@ from agents.highlight_agent import HighlightAgent
 from models import Transcript
 from dotenv import load_dotenv
 
+import argparse
+from pathlib import Path
+
 def run_highlights():
     load_dotenv()
     
+    parser = argparse.ArgumentParser(description="Clean and extract highlights.")
+    parser.add_argument("--transcript", "-t", type=str, help="Path to transcript JSON file")
+    parser.add_argument("--output", "-o", type=str, help="Path to save highlights JSON")
+    args = parser.parse_args()
+
     config_path = "config/settings.yaml"
-    transcript_path = "output/transcript.json"
-    output_path = "output/highlights.json"
+    # Default inputs if not provided
+    transcript_path = args.transcript or "output/transcript.json"
+    
+    # Determine output path based on input
+    if args.output:
+        output_path = args.output
+    else:
+        # If input is transcript_foo.json, output is highlights_foo.json
+        stem = Path(transcript_path).stem.replace("transcript", "highlights")
+        if not stem.startswith("highlights"):
+            stem = f"highlights_{stem}"
+        output_path = f"output/{stem}.json"
     
     if not os.path.exists(transcript_path):
-        print(f"❌ Error: {transcript_path} not found.")
+        print(f"❌ Error: Transcript file '{transcript_path}' not found.")
         return
 
     print(f"🔍 Loading transcript from: {transcript_path}")

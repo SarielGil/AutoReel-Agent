@@ -6,7 +6,7 @@ Wrapper around FFmpeg for common video/audio operations.
 import subprocess
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 def extract_audio(
     video_path: str,
@@ -217,3 +217,107 @@ def get_video_info(video_path: str) -> dict:
     import json
     result = subprocess.run(cmd, check=True, capture_output=True, text=True)
     return json.loads(result.stdout)
+
+
+def concat_videos(
+    video_paths: List[str],
+    output_path: str,
+) -> str:
+    """
+    Concatenate multiple video files into one.
+    Uses the concat demuxer (requires all videos to have same parameters).
+    
+    Args:
+        video_paths: List of paths to video files
+        output_path: Path for the combined output video
+    """
+    if not video_paths:
+        raise ValueError("No video paths provided for concatenation")
+    
+    # Create a temporary file list for FFmpeg
+    list_file = Path(output_path).with_suffix(".txt")
+    with open(list_file, "w") as f:
+        for path in video_paths:
+            # Absolute path with escaped single quotes for FFmpeg
+            abs_path = str(Path(path).absolute()).replace("'", "'\\''")
+            f.write(f"file '{abs_path}'\n")
+            
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", str(list_file),
+        "-c", "copy",  # Fast concat without re-encoding
+        output_path
+    ]
+    
+    try:
+        subprocess.run(cmd, check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error during concatenation: {e.stderr.decode()}")
+        raise
+    finally:
+        if list_file.exists():
+            list_file.unlink()
+            
+    return output_path
+
+
+def concat_segments_visual(
+    video_path: str,
+    segments: List[dict],
+    output_path: str,
+) -> str:
+    """
+    Concatenate video segments using a complex filter graph.
+    This avoids creating intermediate files but requires re-encoding.
+    
+    Args:
+        video_path: Source video path
+        segments: List of dicts with 'start' and 'end' keys
+        output_path: Path for output video
+    """
+    if not segments:
+        return ""
+
+    inputs = []
+    filter_parts = []
+    
+    # We add the same input once because we'll refer to [0:v] and [0:a]
+    cmd = ["ffmpeg", "-y", "-i", str(video_path)]
+    
+    for i, seg in enumerate(segments):
+        start = seg['start']
+        end = seg['end']
+        # Video trim + setpts
+        filter_parts.append(f"[0:v]trim=start={start}:end={end},setpts=PTS-STARTPTS[v{i}]")
+        # Audio trim + asetpts
+        filter_parts.append(f"[0:a]atrim=start={start}:end={end},asetpts=PTS-STARTPTS[a{i}]")
+
+    # The concat part
+    concat_ins = ""
+    for i in range(len(segments)):
+        concat_ins += f"[v{i}][a{i}]"
+    
+    concat_filter = f"{concat_ins}concat=n={len(segments)}:v=1:a=1[outv][outa]"
+    
+    full_filter = ";".join(filter_parts) + ";" + concat_filter
+    
+    cmd.extend([
+        "-filter_complex", full_filter,
+        "-map", "[outv]",
+        "-map", "[outa]",
+        "-c:v", "libx264",
+        "-preset", "superfast",
+        "-crf", "23",
+        "-c:a", "aac",
+        str(output_path)
+    ])
+    
+    try:
+        subprocess.run(cmd, check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Concatenation failed: {e.stderr.decode()}")
+        raise
+
+    return output_path

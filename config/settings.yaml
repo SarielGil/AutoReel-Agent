@@ -3,7 +3,7 @@
 
 whisper:
   method: "gemini"        # "local" or "gemini"
-  model: "gemini-2.0-flash"
+  model: "gemini-2.0-flash-exp"
   device: "cpu"
   language: "he"
   task: "transcribe"
@@ -41,7 +41,7 @@ subtitles:
   word_highlight: true     # Highlight active word
 
 highlight_detection:
-  model: "gemini-2.0-flash"
+  model: "gemini-2.0-flash-exp"
   min_score: 6            # Minimum virality score (1-10) to become a reel
   signals:
     - emotional_peaks
@@ -49,6 +49,8 @@ highlight_detection:
     - topic_transitions
     - speaker_energy
     - audience_appeal
+    - information
+    - knowlage
 
 platforms:
   instagram:

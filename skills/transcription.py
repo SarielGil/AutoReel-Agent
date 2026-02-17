@@ -67,7 +67,7 @@ def transcribe_hebrew(
 
 def transcribe_with_gemini(
     audio_path: str,
-    model_name: str = "gemini-3-flash",
+    model_name: str = "gemini-2.0-flash-exp",
     language: str = "he",
 ) -> list:
     """

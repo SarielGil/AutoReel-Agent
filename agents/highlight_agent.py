@@ -47,17 +47,62 @@ class HighlightAgent:
         detection_config = self.config['highlight_detection']
 
         # Detect highlights using LLM
+        # Detect highlights using LLM
         highlights = detect_highlights_llm(
             transcript=transcript,
             model_name=detection_config['model'],
-            max_highlights=max_highlights,
+            max_highlights=max_highlights * 2, # Request more to allow for filtering
             min_duration=reel_config['min_duration'],
             max_duration=reel_config['max_duration'],
             min_score=detection_config.get('min_virality_score', 6),
             signals=detection_config['signals'],
         )
 
-        # Sort by virality score (highest first)
-        highlights.sort(key=lambda h: h.virality_score, reverse=True)
+        # Post-process: Ensure speaker consistency
+        cleaned_highlights = []
+        for h in highlights:
+            # check segments in this range
+            segments = transcript.get_segments_in_range(h.start, h.end)
+            if not segments:
+                continue
+            
+            # Identify dominant speaker (by duration)
+            speaker_durations = {}
+            for seg in segments:
+                dur = min(seg.end, h.end) - max(seg.start, h.start)
+                if dur > 0:
+                    speaker_durations[seg.speaker] = speaker_durations.get(seg.speaker, 0) + dur
+            
+            if not speaker_durations:
+                continue
 
-        return highlights[:max_highlights]
+            dominant_speaker = max(speaker_durations, key=speaker_durations.get)
+            total_duration = h.end - h.start
+            dominant_ratio = speaker_durations[dominant_speaker] / total_duration
+            
+            # If dominant speaker is < 90% of the clip, try to trim
+            if dominant_ratio < 0.9:
+                # Find the contiguous block of the dominant speaker
+                # This is a simple heuristic: Find the start/end of the dominant speaker's segments
+                # that fall within the highlight range
+                
+                dom_segments = [s for s in segments if s.speaker == dominant_speaker]
+                if not dom_segments:
+                    continue
+                    
+                new_start = max(h.start, dom_segments[0].start)
+                new_end = min(h.end, dom_segments[-1].end)
+                
+                # Check if new duration is enough
+                if (new_end - new_start) >= reel_config['min_duration']:
+                   # Update highlight
+                   h.start = new_start
+                   h.end = new_end
+                   cleaned_highlights.append(h)
+            else:
+                cleaned_highlights.append(h)
+
+        # Sort by virality score (highest first)
+        cleaned_highlights.sort(key=lambda h: h.virality_score, reverse=True)
+
+        return cleaned_highlights[:max_highlights]

@@ -6,15 +6,33 @@ from agents.subtitle_agent import SubtitleAgent
 from models import Transcript, Highlight, Platform
 from dotenv import load_dotenv
 
+import argparse
+from pathlib import Path
+
 def run_generation():
     load_dotenv()
     
+    parser = argparse.ArgumentParser(description="Generate reels from highlights.")
+    parser.add_argument("--highlights", "-h_file", type=str, help="Path to highlights JSON")
+    parser.add_argument("--transcript", "-t", type=str, help="Path to transcript JSON")
+    parser.add_argument("--video", "-v", type=str, help="Path to input video file")
+    parser.add_argument("--output", "-o", type=str, help="Output directory", default="output/reels")
+    parser.add_argument("--resize", action="store_true", help="Resize video to vertical if not already")
+    args = parser.parse_args()
+
     config_path = "config/settings.yaml"
-    transcript_path = "output/transcript.json"
-    highlights_path = "output/highlights.json"
     
-    # IMPORTANT: We use the already resized vertical video to save time!
-    video_path = "output/full_video_vertical_mobile.mp4"
+    # Default paths for backward compatibility or single-run workflow
+    highlights_path = args.highlights or "output/highlights.json"
+    transcript_path = args.transcript or "output/transcript.json"
+    video_path = args.video or "output/full_video_vertical_mobile.mp4"
+    
+    # Check if we should skip resize (default is True in legacy, but false if arg provided)
+    # Actually, let's inverse it: if --resize is passed, skip_resize=False. 
+    # If no video arg is passed, we assume the pre-processed "full_video_vertical_mobile.mp4" used in the original pipeline, 
+    # so we SKIP resize.
+    # If a video arg IS passed (e.g. a split file), we probably want to resize it, so --resize should be used.
+    skip_resize = not args.resize
     
     if not os.path.exists(highlights_path):
         print(f"❌ Error: {highlights_path} not found. Run run_highlights.py first.")
@@ -30,10 +48,10 @@ def run_generation():
         transcript_data = json.load(f)
     transcript = Transcript(**transcript_data)
 
-    print(f"✂️ Step 1: Cutting clips from the resized video...")
+    print(f"✂️ Step 1: Cutting clips from the video...")
     editor = EditorAgent(config_path)
-    # skip_resize=True because the source is already vertical
-    clips = editor.process(video_path=video_path, highlights=highlights, skip_resize=True)
+    # Use the dynamic skip_resize flag
+    clips = editor.process(video_path=video_path, highlights=highlights, skip_resize=skip_resize)
     print(f"  ✅ Cut {len(clips)} clips")
 
     print(f"📝 Step 2: Adding Hebrew subtitles...")
